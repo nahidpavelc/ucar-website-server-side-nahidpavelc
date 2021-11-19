@@ -51,6 +51,13 @@ async function run() {
         const bookingsCollection = database.collection('bookings');
         const userCollection = database.collection('users');
 
+        //POST API cars
+        app.post('/cars', async (req, res) => {
+            const car = req.body;
+            console.log('hit post api', car);
+            const result = await carsCollection.insertOne(car);
+            res.json(result);
+        })
         // GET API Cars 
         app.get('/cars', async (req, res) => {
             const cursor = carsCollection.find({});
@@ -80,6 +87,13 @@ async function run() {
             console.log(result);
             res.json(result);
         })
+        //Delete API review
+        app.delete('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await reviewsCollection.deleteOne(query);
+            res.json(result);
+        })
 
         //POST API Booking
         app.post('/bookings', async (req, res) => {
@@ -96,6 +110,13 @@ async function run() {
             const booking = await cursor.toArray();
             res.json(booking);
         });
+        //DELETE API Booking
+        app.delete('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await bookingsCollection.deleteOne(query);
+            res.json(result);
+        })
 
         //GET API users
         app.get('/users/:email', async (req, res) => {
