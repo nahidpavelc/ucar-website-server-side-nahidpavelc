@@ -1,12 +1,14 @@
-const express = require('express')
+const express = require('express');
+const fileUpload = require('express-fileupload');
 const app = express()
+
 const { MongoClient } = require('mongodb');
 const cors = require('cors');
 const admin = require("firebase-admin");
 require('dotenv').config();
 const objectId = require('mongodb').ObjectId;
 const stripe = require('stripe')(process.env.STRIPE_SECRET);
-const fileUpload = require('express-fileUpload');
+
 
 //Find Object ID
 const ObjectId = require('mongodb').ObjectId;
@@ -25,6 +27,7 @@ admin.initializeApp({
 app.use(cors());
 app.use(express.json());
 app.use(fileUpload());
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.xvoog.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
