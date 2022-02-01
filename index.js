@@ -126,19 +126,27 @@ async function run() {
             res.json(result);
         })
         //GET ALL BOOKING
-        app.get('/bookings', async (req, res) => {
-            const cursor = bookingsCollection.find({});
-            const bookings = await cursor.toArray();
-            res.json(bookings);
-        });
+        // app.get('/bookings', async (req, res) => {
+        //     const cursor = bookingsCollection.find({});
+        //     const bookings = await cursor.toArray();
+        //     res.json(bookings);
+        // });
+
+
         //GET Booking Email
-        app.get('/bookings/:email', verifyToken, async (req, res) => {
+        app.get('/bookings', verifyToken, async (req, res) => {
+            let query = {};
             const email = req.query.email;
-            const query = { email: email }
+            if (email) {
+                query = { email: email };
+            }
             const cursor = bookingsCollection.find(query);
             const booking = await cursor.toArray();
             res.json(booking);
         });
+
+
+
         //GET Single Booking
         app.get('/bookings/:id', async (req, res) => {
             const id = req.params.id;
