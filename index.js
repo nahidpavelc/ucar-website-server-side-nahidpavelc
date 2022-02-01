@@ -12,12 +12,11 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET);
 
 //Find Object ID
 const ObjectId = require('mongodb').ObjectId;
-
 const port = process.env.PORT || 5000;
 
 // sdk server
 // u - car - firebase - adminsdk.json
-const serviceAccount = require('./u-car-firebase-adminsdk.json');
+const serviceAccount = require('./u-car-8c946-firebase-adminsdk-kdooe-bf0a12161e.json');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -35,14 +34,14 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 async function verifyToken(req, res, next) {
     if (req.headers?.authorization?.startsWith('Bearer ')) {
-        const token = req.headers.authorization.split(' ')[1];
-
-        try {
-            const decodedUser = await admin.auth().verifyIdToken(token);
-            req.decodedEmail = decodedUser.email;
-        }
-        catch {
-        }
+        const idToken = req.headers.authorization.split('Bearer ')[1];
+        console.log('here is token', idToken);
+        // try {
+        //     const decodedUser = await admin.auth().verifyIdToken(idToken);
+        //     req.decodedUserEmail = decodedUser.email;
+        // }
+        // catch {
+        // }
     }
     next();
 }
@@ -105,9 +104,7 @@ async function run() {
         //Post API review
         app.post('/reviews', async (req, res) => {
             const review = req.body;
-            console.log('hit the post api', review);
             const result = await reviewsCollection.insertOne(review);
-            console.log(result);
             res.json(result);
         })
         //Delete API review
@@ -131,24 +128,30 @@ async function run() {
         //     const bookings = await cursor.toArray();
         //     res.json(bookings);
         // });
-
-
-        //GET Booking Email
-        app.get('/bookings', verifyToken, async (req, res) => {
+        app.get('/bookings', async (req, res) => {
+            let query = {};
             const email = req.query.email;
-            if (req.decodedUserEmail === email) {
-                const query = { email: email };
-                const cursor = bookingsCollection.find(query);
-                const booking = await cursor.toArray();
-                res.json(booking);
+            if (email) {
+                query = { email: email };
             }
-            else {
-                res.status(401).json({ message: 'User not Authorized' })
-            }
+            const cursor = bookingsCollection.find(query);
+            const bookings = await cursor.toArray();
+            res.json(bookings);
         });
-
-
-
+        //GET Booking Email
+        // app.get('/bookings', verifyToken, async (req, res) => {
+        //     console.log(req.headers.authorization)
+        //     const email = req.query.email;
+        //     if (req.decodedUserEmail === email) {
+        //         const query = { email: email };
+        //         const cursor = bookingsCollection.find(query);
+        //         const bookings = await cursor.toArray();
+        //         res.json(bookings);
+        //     }
+        //     else {
+        //         res.status(401).json({ message: 'User not Authorized' })
+        //     }
+        // });
         //GET Single Booking
         app.get('/bookings/:id', async (req, res) => {
             const id = req.params.id;
