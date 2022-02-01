@@ -4,6 +4,9 @@ const { MongoClient } = require('mongodb');
 const cors = require('cors');
 const admin = require("firebase-admin");
 require('dotenv').config();
+const objectId = require('mongodb').ObjectId;
+const stripe = require('stripe')(process.env.STRIPE_SECRET)
+const fileUpload = require('express-fileUpload');
 
 
 //Find Object ID
@@ -23,6 +26,7 @@ admin.initializeApp({
 //middleware
 app.use(cors());
 app.use(express.json());
+app.use(fileUpload());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.xvoog.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
@@ -53,12 +57,23 @@ async function run() {
 
         //POST API cars
         app.post('/cars', async (req, res) => {
-            const car = req.body;
-            console.log('hit post api', car);
+            const name = req.body.name;
+            const detail = req.body.detail;
+            const price = req.body.price;
+            const pic = req.files.image;
+            const picData = pic.data;
+            const encodePic = picData.toString('base64');
+            const imageBuffer = Buffer.from(encodePic, 'base64');
+            const car = {
+                name,
+                detail,
+                price,
+                img: imageBuffer
+            }
             const result = await carsCollection.insertOne(car);
             res.json(result);
         })
-        // GET API Cars 
+        // GET ALL Cars 
         app.get('/cars', async (req, res) => {
             const cursor = carsCollection.find({});
             const cars = await cursor.toArray();
@@ -70,6 +85,13 @@ async function run() {
             console.log('car id', id);
             const query = { _id: ObjectId(id) };
             const car = await carsCollection.findOne(query);
+            res.json(car);
+        })
+        //DELETE API Car
+        app.delete('/cars/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const car = await carsCollection.deleteOne(query);
             res.json(car);
         })
 
@@ -95,20 +117,33 @@ async function run() {
             res.json(result);
         })
 
-        //POST API Booking
+        //POST Booking
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const result = await bookingsCollection.insertOne(booking);
             console.log(result);
             res.json(result);
         })
-        //GET API Booking
-        app.get('/bookings', verifyToken, async (req, res) => {
+        //GET ALL BOOKING
+        app.get('/bookings', async (req, res) => {
+            const cursor = bookingsCollection.find({});
+            const bookings = await cursor.toArray();
+            res.json(bookings);
+        });
+        //GET Booking Email
+        app.get('/bookings/:email', verifyToken, async (req, res) => {
             const email = req.query.email;
             const query = { email: email }
             const cursor = bookingsCollection.find(query);
             const booking = await cursor.toArray();
             res.json(booking);
+        });
+        //GET Single Booking
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await bookingsCollection.findOne(query);
+            res.json(result);
         });
         //DELETE API Booking
         app.delete('/bookings/:id', async (req, res) => {
@@ -117,6 +152,20 @@ async function run() {
             const result = await bookingsCollection.deleteOne(query);
             res.json(result);
         })
+        //Update API Booking
+        app.put('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    payment: payment
+                }
+            };
+            const result = await bookingsCollection.updateOne(filter, updateDoc);
+            res.json(result);
+        })
+
 
         //GET API users
         app.get('/users/:email', async (req, res) => {
@@ -163,7 +212,16 @@ async function run() {
             }
         })
 
-
+        app.post('/create-payment-intent', async (req, res) => {
+            const paymentInfo = req.body;
+            const amount = paymentInfo.price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                payment_method_types: ['card']
+            });
+            res.json({ clientSecret: paymentIntent.client_secret })
+        })
 
 
     }
@@ -176,7 +234,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('Running Genius Server ');
+    res.send('Running CAR Server ');
 });
 
 app.listen(port, () => {
