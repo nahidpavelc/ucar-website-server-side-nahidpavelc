@@ -135,14 +135,16 @@ async function run() {
 
         //GET Booking Email
         app.get('/bookings', verifyToken, async (req, res) => {
-            let query = {};
             const email = req.query.email;
-            if (email) {
-                query = { email: email };
+            if (req.decodedUserEmail === email) {
+                const query = { email: email };
+                const cursor = bookingsCollection.find(query);
+                const booking = await cursor.toArray();
+                res.json(booking);
             }
-            const cursor = bookingsCollection.find(query);
-            const booking = await cursor.toArray();
-            res.json(booking);
+            else {
+                res.status(401).json({ message: 'User not Authorized' })
+            }
         });
 
 
