@@ -6,7 +6,7 @@ const admin = require("firebase-admin");
 require('dotenv').config();
 const objectId = require('mongodb').ObjectId;
 const stripe = require('stripe')(process.env.STRIPE_SECRET);
-const fileupload = require('express-fileUpload');
+const fileUpload = require('express-fileUpload');
 
 
 //Find Object ID
