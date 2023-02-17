@@ -236,8 +236,6 @@ async function run() {
             });
             res.json({ clientSecret: paymentIntent.client_secret })
         })
-
-
     }
 
     finally {
