@@ -12,7 +12,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET);
 
 //Find Object ID
 const ObjectId = require('mongodb').ObjectId;
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5050;
 
 // sdk server
 // u - car - firebase - adminsdk.json
